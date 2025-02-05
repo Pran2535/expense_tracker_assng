@@ -1,7 +1,10 @@
+// server.js
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import { fileURLToPath } from 'url';
+import path from "path";
 
 // Import Routes
 import AuthRoutes from "./routes/Authroutes.js";
@@ -9,15 +12,14 @@ import ExpenseRoutes from "./routes/ExpenseRoutes.js";
 
 // Error Middleware
 import { errorHandler } from "./middlewares/errorHandler.js";
-import path from "path";
 
 // Configure Environment
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-
-const _dirname = path.resolve();
-
 const PORT = process.env.PORT || 5000;
 
 // Middleware
@@ -37,18 +39,29 @@ mongoose
 app.use("/api/auth", AuthRoutes);
 app.use("/api/expenses", ExpenseRoutes);
 
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+});
+
 // Global Error Handler
 app.use(errorHandler);
-
-// Serve the static files from the frontend after build
-app.use(express.static(path.join(_dirname, "/frontend/build")));
-
-// Catch-all route for frontend SPA routing
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve(_dirname, "frontend", "build", "index.html"));
-});
 
 // Start Server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// middlewares/errorHandler.js
+export const errorHandler = (err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
+    success: false,
+    error: err.message || 'Server Error',
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+};
