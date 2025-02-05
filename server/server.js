@@ -11,7 +11,7 @@ import AuthRoutes from "./routes/Authroutes.js";
 import ExpenseRoutes from "./routes/ExpenseRoutes.js";
 
 // Error Middleware
-import { errorHandler } from "./middlewares/errorHandler.js";
+// import { errorHandler } from "./middlewares/errorHandler.js";
 
 // Configure Environment
 dotenv.config();
